@@ -29,9 +29,13 @@ app.post("/api/login",(req,res)=>{
     });
     if(user){
     //generate and access token
-    // const accessToken=Jwt.sign({id:user.id,isAdmin:user.isAdmin})
-    
-    res.json(user);
+    const accessToken=Jwt.sign({id:user.id,isAdmin:user.isAdmin},"mySecreteKey");
+    res.json({
+        userName:user.userName,
+        isAdmin:user.isAdmin,
+        accessToken,
+    })
+    // res.json(user);
     }else{
         res.status(400).json("userName and password incorrect");
     }
