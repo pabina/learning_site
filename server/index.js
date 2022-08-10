@@ -22,6 +22,22 @@ const app=express();
  }
 
 ];
+let refreshtoken=[];
+
+// app.post("/api/refresh",(req,res)=>{
+    //take the refresh token from the user
+// const refreshtoken=req.body.token
+
+    //send error if there is not token or the token is invalid 
+
+// if(!refreshtoken)return res.status(401).json("you are not auth")
+
+    //if everything is okay,create new access token,refresh token and send to user
+
+
+
+
+// })
 app.post("/api/login",(req,res)=>{
     const { userName,password }=req.body;
     const user=users.find((u)=>{
@@ -29,7 +45,8 @@ app.post("/api/login",(req,res)=>{
     });
     if(user){
     //generate and access token
-    const accessToken=Jwt.sign({id:user.id,isAdmin:user.isAdmin},"mySecreteKey");
+    const accessToken=Jwt.sign({id:user.id,isAdmin:user.isAdmin},"mySecreteKey",
+    {expiresIn:'15m'});
     res.json({
         userName:user.userName,
         isAdmin:user.isAdmin,
@@ -41,6 +58,35 @@ app.post("/api/login",(req,res)=>{
     }
 });
 
+
+const verify=(req,res,next)=>{
+const authHeader=req.headers.authorization; 
+if(authHeader){
+    const token=authHeader.split(" ")[1];
+    Jwt.verify(token,"mySecreteKey",(err,user)=>{
+        if(err){
+            return res.status(403).json("token is not valid");
+        }
+
+
+        req.user=user;
+        next();
+    })
+
+} else{
+    res.status(401).json("you are not authenticated");
+} 
+}
+
+
+app.delete("/api/users/:userId",verify,(req,res)=>{
+  if(req.user.id===req.params.userId || req.user.isAdmin){
+    res.status(200).json("user has been delete");
+  }
+  else{
+    res.status(403).json("you are not alllow to delete this user");
+  } 
+})
 
 app.listen(PORT,()=>{
     console.log("backend server is working");
