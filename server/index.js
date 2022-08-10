@@ -21,6 +21,7 @@ const users = [
     isAdmin: false,
   },
 ];
+
 let refreshTokens = [];
 
 
@@ -48,8 +49,8 @@ app.post("/api/refresh", (req, res) => {
     res.status(200).json({
     accessToken:newAccessToken,
     refreshToken:newRefreshToken,
-    })
-   })
+    });
+   });
   //if everything is okay,create new access token,refresh token and send to user
 });
 
@@ -59,7 +60,7 @@ const generateAccessToken = (user) => {
     return Jwt.sign(
         { id: user.id, isAdmin: user.isAdmin },
         "mySecreteKey",
-        { expiresIn: "15m" }
+        { expiresIn: "30s" }
       );
 };
 
@@ -72,6 +73,9 @@ const generateRefreshToken = (user) => {
       );
 };
 
+
+
+//login
 app.post("/api/login", (req, res) => {
   const { userName, password } = req.body;
   const user = users.find((u) => {
@@ -98,6 +102,10 @@ app.post("/api/login", (req, res) => {
   }
 });
 
+
+
+
+//verify middleware
 const verify = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (authHeader) {
@@ -117,12 +125,25 @@ const verify = (req, res, next) => {
   }
 };
 
+
+
+//delete
 app.delete("/api/users/:userId", verify, (req, res) => {
   if (req.user.id === req.params.userId || req.user.isAdmin) {
     res.status(200).json("user has been delete");
   } else {
     res.status(403).json("you are not alllow to delete this user");
   }
+});
+
+
+
+//logout
+app.post("/api/logout",verify,(req,res)=>{
+    const refreshToken=req.body.token;
+    refreshTokens=refreshTokens.filter((token)=> token !== refreshToken);
+    res.status(200).json("you logged out successfully.");
+   
 });
 
 app.listen(PORT, () => {
